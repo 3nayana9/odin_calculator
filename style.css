@@ -1,49 +1,86 @@
-.calculator {
-    width: 320px;
-    margin: 50px auto;
-    padding: 10px;
-    background: #222;
-    border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+/* Nice gradient background for the whole page */
+body {
+    background: linear-gradient(135deg, #1e1e2f, #252542);
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
 }
 
+h1 {
+    font-family: 'Courier New', Courier, monospace;
+    text-align: center;
+    color: #fff;
+    padding-top: 30px;
+}
+
+.calculator {
+    width: 320px;
+    margin: 30px auto;
+    padding: 15px;
+    background: #2b2b36;
+    border-radius: 16px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    border: 1px solid #3d3d5c;
+}
 
 #display {
-    background-color: azure;
-    height: 60px;
-    margin-bottom: 10px;
+    background-color: #e6f7ff;
+    height: 65px;
+    margin-bottom: 15px;
     padding: 10px;
-    font-size: 50px;
+    font-size: 38px;
+    font-family: monospace;
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    border-radius: 6px;
+    border-radius: 8px;
     overflow: hidden;
+    color: #111;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
 }
 
-
-h1{
-    
-    font-family: 'Courier New', Courier, monospace;
-    text-align: center;
-
+/* Flex Container to put Left and Right boxes side-by-side */
+.keypad-container {
+    display: flex;
 }
+
+.left-box {
+    flex: 3; /* Takes up 3 shares of space */
+    display: flex;
+    flex-direction: column;
+}
+
+.right-box {
+    flex: 1; /* Takes up 1 share of space */
+    display: flex;
+    flex-direction: column;
+}
+
 .row {
     display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
+    width: 100%;
 }
 
-
-
+/* Basic sizing matching your original theme */
 button {
     flex: 1;
-    height: 60px;
+    height: 55px;
     margin: 4px;
     font-size: 18px;
+    font-weight: bold;
     border: 2px rgb(164, 204, 210) solid;
     border-radius: 8px;
-    background: #444;
+    background: #3a3a4a;
     color: white;
-    
+    cursor: pointer;
+}
+
+/* Makes 0 wider to fill spaces naturally */
+.zero {
+    flex: 2;
+}
+
+/* Explicitly lets laptop-style operator keys stretch long vertically */
+.tall-btn {
+    height: 118px; 
 }

@@ -1,8 +1,11 @@
-// Math functions
-function add(a, b) { return a + b; }
+// ── Math functions ──────────────────────────────────────────────────────────
+function add(a, b)      { return a + b; }
 function subtract(a, b) { return a - b; }
 function multiply(a, b) { return a * b; }
-function divide(a, b) { return b === 0 ? "Err" : a / b; }
+function divide(a, b) {
+    if (b === 0) return "Can't divide by zero 😎";
+    return a / b;
+}
 
 function operate(operator, a, b) {
     a = Number(a);
@@ -12,7 +15,7 @@ function operate(operator, a, b) {
         case "-": return subtract(a, b);
         case "*": return multiply(a, b);
         case "/": return divide(a, b);
-        default: return null;
+        default:  return null;
     }
 }
 
@@ -21,116 +24,105 @@ function roundResult(number) {
     return Math.round(number * 1e9) / 1e9;
 }
 
-// Calculator state
-let firstNumber = "";
-let secondNumber = "";
-let currentOperator = null;
-let justEvaled = false;
+// ── State ────────────────────────────────────────────────────────────────────
+let firstNumber      = "";
+let secondNumber     = "";
+let currentOperator  = null;
+let justEvaled       = false;
 
 const opSymbol = { "+": "+", "-": "−", "*": "×", "/": "÷" };
 
-// DOM references
-const display = document.getElementById("display");
-const exprDisplay = document.getElementById("expr"); // small top expression bar (add this element to your HTML)
-const numberButtons = document.querySelectorAll(".number");
+// ── DOM references ───────────────────────────────────────────────────────────
+const display         = document.getElementById("display");
+const exprDisplay     = document.getElementById("expr");
+const numberButtons   = document.querySelectorAll(".number");
 const operatorButtons = document.querySelectorAll(".operator");
-const equalsButton = document.getElementById("equals");
-const clearButton = document.querySelector(".clear");
-const decimalButton = document.getElementById("decimal");
+const equalsButton    = document.getElementById("equals");
+const clearButton     = document.querySelector(".clear");
+const decimalButton   = document.getElementById("decimal");
 const backspaceButton = document.getElementById("backspace");
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function updateExpr() {
     if (!exprDisplay) return;
     if (currentOperator && firstNumber !== "") {
-        if (secondNumber !== "") {
-            exprDisplay.textContent = firstNumber + " " + opSymbol[currentOperator] + " " + secondNumber;
-        } else {
-            exprDisplay.textContent = firstNumber + " " + opSymbol[currentOperator];
-        }
+        const sym = opSymbol[currentOperator] || currentOperator;
+        exprDisplay.textContent = secondNumber !== ""
+            ? firstNumber + " " + sym + " " + secondNumber
+            : firstNumber + " " + sym;
     } else {
         exprDisplay.textContent = "";
     }
 }
 
-// Number input
-numberButtons.forEach(button => {
-    button.addEventListener("click", () => {
-        const digit = button.textContent;
+// ── Actions (shared by buttons and keyboard) ──────────────────────────────────
 
-        if (justEvaled) {
-            firstNumber = "";
-            secondNumber = "";
-            currentOperator = null;
-            justEvaled = false;
-        }
+function inputDigit(digit) {
+    if (justEvaled) {
+        firstNumber     = "";
+        secondNumber    = "";
+        currentOperator = null;
+        justEvaled      = false;
+    }
 
-        if (currentOperator === null) {
-            if (firstNumber === "0" && digit !== ".") firstNumber = "";
-            firstNumber += digit;
-            display.textContent = firstNumber;
-        } else {
-            if (secondNumber === "0" && digit !== ".") secondNumber = "";
-            secondNumber += digit;
-            display.textContent = secondNumber;
-        }
+    if (currentOperator === null) {
+        if (firstNumber === "0") firstNumber = "";
+        firstNumber += digit;
+        display.textContent = firstNumber;
+    } else {
+        if (secondNumber === "0") secondNumber = "";
+        secondNumber += digit;
+        // Keeps both the first number and current operator visible while typing the second number
+        display.textContent = firstNumber + " " + currentOperator + " " + secondNumber;
+    }
 
+    updateExpr();
+}
+
+function inputOperator(op) {
+    if (firstNumber === "") return;
+
+    if (secondNumber === "" && !justEvaled) {
+        currentOperator = op;
+        display.textContent = firstNumber + " " + currentOperator;
         updateExpr();
-    });
-});
+        return;
+    }
 
-// Operator input
-operatorButtons.forEach(button => {
-    button.addEventListener("click", () => {
-        if (firstNumber === "") return;
+    if (secondNumber !== "") {
+        let result  = roundResult(operate(currentOperator, firstNumber, secondNumber));
+        firstNumber = String(result);
+        secondNumber = "";
+    }
 
-        // Evaluate if second number exists
-        if (secondNumber !== "") {
-            let result = roundResult(operate(currentOperator, firstNumber, secondNumber));
-            firstNumber = String(result);
-            secondNumber = "";
-            display.textContent = firstNumber;
-        }
+    currentOperator = op;
+    display.textContent = firstNumber + " " + currentOperator;
+    justEvaled      = false;
+    updateExpr();
+}
 
-        currentOperator = button.textContent;
-        display.textContent += button.textContent; 
-        justEvaled = false;
-        updateExpr();
-    });
-});
-
-// Equals button
-equalsButton.addEventListener("click", () => {
+function inputEquals() {
     if (firstNumber === "" || secondNumber === "" || currentOperator === null) return;
 
-    const exprStr = firstNumber + " " + opSymbol[currentOperator] + " " + secondNumber;
-    let result = roundResult(operate(currentOperator, firstNumber, secondNumber));
+    const sym     = opSymbol[currentOperator] || currentOperator;
+    const exprStr = firstNumber + " " + sym + " " + secondNumber;
+    let result    = roundResult(operate(currentOperator, firstNumber, secondNumber));
 
     if (exprDisplay) exprDisplay.textContent = exprStr + " =";
     display.textContent = result;
 
-    firstNumber = String(result);
-    secondNumber = "";
+    firstNumber     = String(result);
+    secondNumber    = "";
     currentOperator = null;
-    justEvaled = true;
-});
+    justEvaled      = true;
+}
 
-// Clear button
-clearButton.addEventListener("click", () => {
-    firstNumber = "";
-    secondNumber = "";
-    currentOperator = null;
-    justEvaled = false;
-    display.textContent = "0";
-    if (exprDisplay) exprDisplay.textContent = "";
-});
-
-// Decimal button — FIX: check the active number string, not the display
-decimalButton.addEventListener("click", () => {
+function inputDecimal() {
     if (justEvaled) {
-        firstNumber = "0";
-        secondNumber = "";
+        firstNumber     = "0";
+        secondNumber    = "";
         currentOperator = null;
-        justEvaled = false;
+        justEvaled      = false;
     }
 
     if (currentOperator === null) {
@@ -142,23 +134,67 @@ decimalButton.addEventListener("click", () => {
         if (secondNumber.includes(".")) return;
         if (secondNumber === "") secondNumber = "0";
         secondNumber += ".";
-        display.textContent = secondNumber;
+        display.textContent = firstNumber + " " + currentOperator + " " + secondNumber;
     }
 
     updateExpr();
-});
+}
 
-// Backspace button — FIX: slice the active state variable directly, not display
-backspaceButton.addEventListener("click", () => {
+function inputBackspace() {
     if (justEvaled) return;
 
     if (currentOperator === null) {
-        firstNumber = firstNumber.slice(0, -1);
+        firstNumber         = firstNumber.slice(0, -1);
         display.textContent = firstNumber || "0";
+    } else if (secondNumber !== "") {
+        secondNumber        = secondNumber.slice(0, -1);
+        display.textContent = firstNumber + " " + currentOperator + " " + secondNumber;
     } else {
-        secondNumber = secondNumber.slice(0, -1);
-        display.textContent = secondNumber || "0";
+        // If second number is empty, remove the operator entirely
+        currentOperator = null;
+        display.textContent = firstNumber || "0";
     }
 
     updateExpr();
+}
+
+function inputClear() {
+    firstNumber     = "";
+    secondNumber    = "";
+    currentOperator = null;
+    justEvaled      = false;
+    display.textContent = "0";
+    if (exprDisplay) exprDisplay.textContent = "";
+}
+
+// ── Button listeners ──────────────────────────────────────────────────────────
+
+numberButtons.forEach(button => {
+    button.addEventListener("click", () => inputDigit(button.textContent.trim()));
+});
+
+operatorButtons.forEach(button => {
+    button.addEventListener("click", () => inputOperator(button.textContent.trim()));
+});
+
+equalsButton.addEventListener("click",    inputEquals);
+clearButton.addEventListener("click",     inputClear);
+decimalButton.addEventListener("click",   inputDecimal);
+backspaceButton.addEventListener("click", inputBackspace);
+
+// ── Keyboard support ──────────────────────────────────────────────────────────
+
+document.addEventListener("keydown", (e) => {
+    if (e.key >= "0" && e.key <= "9")            inputDigit(e.key);
+    else if (e.key === "+")                       inputOperator("+");
+    else if (e.key === "-")                       inputOperator("-");
+    else if (e.key === "*")                       inputOperator("*");
+    else if (e.key === "/") {
+        e.preventDefault();
+        inputOperator("/");
+    }
+    else if (e.key === "Enter" || e.key === "=")  inputEquals();
+    else if (e.key === ".")                        inputDecimal();
+    else if (e.key === "Backspace")               inputBackspace();
+    else if (e.key === "Escape" || e.key === "c" || e.key === "C") inputClear();
 });
